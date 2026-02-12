@@ -12,14 +12,14 @@ function RouteComponent() {
   return (
     <main className="min-h-screen text-white">
 
-        <Header/>
+      <Header />
 
       <div className=" w-full grid grid-cols-2 md:grid-cols-[0.5fr_2fr_0.5fr] gap-4">
-        <Aside1/>
+        <Aside1 />
 
-        <Main/>
+        <Main />
 
-        <Aside2/>
+        <Aside2 />
       </div>
     </main>
   )

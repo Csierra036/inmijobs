@@ -34,7 +34,7 @@ export const Aside1 = () => {
                             alt="Profile"
                         />
                         <img className="object-cover absolute bottom-0 translate-y-1/2 left-1/2 w-8 h-8 rounded-full border border-white" src="https://upload.wikimedia.org/wikipedia/commons/0/06/Flag_of_Venezuela.svg" alt="Badge 1" />
-                        <img className="object-cover absolute bottom-0 translate-y-1/2 left-3/4 w-14 h-14 rounded-full border border-white" src="https://upload.wikimedia.org/wikipedia/commons/d/d9/Flag_of_Canada_%28Pantone%29.svg" alt="Badge 2" />
+                        <img className="object-cover absolute bottom-0 translate-y-1/2 left-3/4 w-12 h-12 rounded-full border border-white" src="https://s1.significados.com/foto/bandera-de-canada-cke.jpg?class=article" alt="Badge 2" />
                     </div>
 
                 </div>
