@@ -34,9 +34,6 @@ func main() {
 	pingHandler := api.NewPingHandler(*authService)
 	profileHandler := api.NewProfileHandler(*profileService, *authService)
 
-	// Run Seed
-	database.Seed(db)
-
 	r := chi.NewRouter()
 
 	r.Use(middleware.Recoverer)

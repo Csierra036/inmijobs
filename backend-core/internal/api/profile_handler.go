@@ -28,9 +28,7 @@ func (h ProfileHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		utils.RespondError(w, http.StatusUnauthorized, "Unauthorized")
 		return
 	}
-	//User de pruebas sin autenticacion
 	//user := struct{ ID string }{ID: "user_test_123"}
-
 	var req dto.UpdateProfileRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "Invalid request body")
@@ -47,6 +45,7 @@ func (h ProfileHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		ID:        profile.ID,
 		UserID:    profile.UserID,
 		Biography: profile.Biography,
+		Title:     profile.Title,
 		Location:  profile.Location,
 	})
 }

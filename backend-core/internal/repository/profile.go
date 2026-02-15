@@ -26,7 +26,7 @@ func (r ProfileRepository) UpsertProfile(ctx context.Context, profile *model.Pro
 
 	result := r.db.WithContext(ctx).Clauses(clause.OnConflict{
 		Columns:   []clause.Column{{Name: "user_id"}},
-		DoUpdates: clause.AssignmentColumns([]string{"biography", "location", "updated_at"}),
+		DoUpdates: clause.AssignmentColumns([]string{"biography", "title", "location", "updated_at"}),
 	}).Create(profile)
 
 	return result.Error

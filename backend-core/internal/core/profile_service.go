@@ -34,6 +34,9 @@ func (s ProfileService) UpdateProfile(ctx context.Context, userID string, req dt
 	if req.Biography != nil {
 		profile.Biography = req.Biography
 	}
+	if req.Title != nil {
+		profile.Title = req.Title
+	}
 	if req.Location != nil {
 		profile.Location = req.Location
 	}
