@@ -87,7 +87,7 @@ type Employee struct {
 	User      User    `gorm:"foreignKey:UserID"`
 	CompanyID int     `gorm:"not null"`
 	Company   Company `gorm:"foreignKey:CompanyID"`
-	Rol       Rol     `gorm:"index;type:Roel;not null"`
+	Rol       Rol     `gorm:"index;type:Rol;not null"`
 }
 
 type PostImage struct {
