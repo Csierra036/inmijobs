@@ -31,6 +31,12 @@ func main() {
 
 	pingHandler := api.NewPingHandler(*authService)
 
+	commentRepository := repository.NewCommentRepository(*db)
+
+	commentService := core.NewCommentService(*commentRepository)
+
+	commentHandler := api.NewCommentHandler(*commentService)
+
 	r := chi.NewRouter()
 
 	r.Use(middleware.Recoverer)
@@ -40,6 +46,7 @@ func main() {
 
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/ping", pingHandler.Ping)
+		r.Mount("/comments", commentHandler.Routes())
 	})
 
 	port := ":8080"
