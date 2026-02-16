@@ -1,56 +1,52 @@
 package repository
 
 import (
-	"github.com/Gabo-div/bingo/inmijobs/backend-core/internal/model" // ⚠️ Ajusta esto a tu módulo real (ej: github.com/AnDoor/inmijobs/...)
+	"github.com/Gabo-div/bingo/inmijobs/backend-core/internal/model"
 	"gorm.io/gorm"
 )
 
-type CommentRepository struct {
-	DB *gorm.DB
+// CommentRepository DEBE tener estos métodos exactos para que el Service no falle
+type CommentRepository interface {
+	Create(comment *model.Comment) (*model.Comment, error)
+	GetByPostID(postID uint) ([]model.Comment, error)
+	GetByID(id uint) (*model.Comment, error)               // Esto quita el error de "GetByID undefined"
+	Update(comment *model.Comment) (*model.Comment, error) // Esto arregla el "WrongArgCount"
+	Delete(id uint) error
 }
 
-func NewCommentRepository(db *gorm.DB) *CommentRepository {
-	return &CommentRepository{DB: db}
+type commentRepository struct {
+	db *gorm.DB
 }
 
-// Create inserta un nuevo comentario
-func (r *CommentRepository) Create(comment *model.Comment) error {
-	return r.DB.Create(comment).Error
+func NewCommentRepository(db *gorm.DB) CommentRepository {
+	return &commentRepository{db: db}
 }
 
-// GetByPostID busca comentarios de un post.
-// Preload("User"): Carga la info del autor.
-// Preload("Replies"): Carga las respuestas directas (si definiste la relación en el modelo).
-func (r *CommentRepository) GetByPostID(postID uint) ([]model.Comment, error) {
+func (r *commentRepository) Create(comment *model.Comment) (*model.Comment, error) {
+	err := r.db.Create(comment).Error
+	return comment, err
+}
+
+func (r *commentRepository) GetByID(id uint) (*model.Comment, error) {
+	var comment model.Comment
+	err := r.db.First(&comment, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &comment, nil
+}
+
+func (r *commentRepository) GetByPostID(postID uint) ([]model.Comment, error) {
 	var comments []model.Comment
-
-	// Truco: Traemos solo los comentarios "Padre" (ParentID IS NULL) y sus respuestas.
-	// Si prefieres traer TODO plano y armar el árbol en el front, quita el .Where("parent_id IS NULL")
-	err := r.DB.Where("post_id = ? AND parent_id IS NULL", postID).
-		Preload("User").         // Cargar autor del comentario padre
-		Preload("Replies").      // Cargar respuestas
-		Preload("Replies.User"). // Cargar autor de las respuestas
-		Order("created_at desc").
-		Find(&comments).Error
-
+	err := r.db.Where("post_id = ?", postID).Find(&comments).Error
 	return comments, err
 }
 
-// Update actualiza el contenido
-func (r *CommentRepository) Update(id uint, content string) (*model.Comment, error) {
-	var comment model.Comment
-	// Primero buscamos si existe
-	if err := r.DB.First(&comment, id).Error; err != nil {
-		return nil, err
-	}
-
-	comment.Content = content
-	err := r.DB.Save(&comment).Error
-	return &comment, err
+func (r *commentRepository) Update(comment *model.Comment) (*model.Comment, error) {
+	err := r.db.Save(comment).Error
+	return comment, err
 }
 
-// Delete elimina un comentario
-func (r *CommentRepository) Delete(id uint) error {
-	// Unscoped() elimina permanentemente. Quítalo si usas SoftDelete.
-	return r.DB.Unscoped().Delete(&model.Comment{}, id).Error
+func (r *commentRepository) Delete(id uint) error {
+	return r.db.Delete(&model.Comment{}, id).Error
 }

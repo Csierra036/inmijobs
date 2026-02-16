@@ -4,12 +4,14 @@ import (
 	"net/http"
 	"strconv"
 
+	// Verifica que esta ruta sea exactamente la de tu go.mod
 	"github.com/Gabo-div/bingo/inmijobs/backend-core/internal/core"
 	"github.com/Gabo-div/bingo/inmijobs/backend-core/internal/dto"
 	"github.com/gin-gonic/gin"
 )
 
 type CommentHandler struct {
+	// Aquí es donde el compilador busca core.CommentService
 	service *core.CommentService
 }
 
@@ -17,56 +19,56 @@ func NewCommentHandler(service *core.CommentService) *CommentHandler {
 	return &CommentHandler{service: service}
 }
 
-// GET /posts/:id/comments
-func (h *CommentHandler) GetCommentsByPost(c *gin.Context) {
-	postID, err := strconv.ParseUint(c.Param("id"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de post inválido"})
+// Create maneja POST /comments
+func (h *CommentHandler) Create(c *gin.Context) {
+	// Extraer userID del contexto (inyectado por el middleware de Auth)
+	val, exists := c.Get("userID")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "usuario no autenticado"})
 		return
 	}
-
-	comments, err := h.service.GetComments(uint(postID))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener comentarios"})
-		return
-	}
-
-	c.JSON(http.StatusOK, comments)
-}
-
-// POST /posts/:id/comments
-func (h *CommentHandler) CreateComment(c *gin.Context) {
-	postID, err := strconv.ParseUint(c.Param("id"), 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de post inválido"})
-		return
-	}
+	userID := val.(uint)
 
 	var req dto.CreateCommentReq
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos: " + err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "datos inválidos: " + err.Error()})
 		return
 	}
 
-	// ---------------------------------------------------------------
-	// TODO: Aquí debes obtener el ID real del usuario desde el token JWT
-	// Por ahora usamos '1' como mock para que puedas probar
-	// userID := c.GetUint("userID")
-	userID := uint(1)
-	// ---------------------------------------------------------------
-
-	comment, err := h.service.CreateComment(userID, uint(postID), req)
+	comment, err := h.service.CreateComment(userID, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "No se pudo crear el comentario"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusCreated, comment)
 }
 
-// PUT /comments/:id
-func (h *CommentHandler) UpdateComment(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+// GetByPost maneja GET /posts/:postId/comments
+func (h *CommentHandler) GetByPost(c *gin.Context) {
+	postIDStr := c.Param("postId")
+	postID, err := strconv.ParseUint(postIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de post inválido"})
+		return
+	}
+
+	comments, err := h.service.GetCommentsByPost(uint(postID))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, comments)
+}
+
+// Update maneja PUT /comments/:id
+func (h *CommentHandler) Update(c *gin.Context) {
+	val, _ := c.Get("userID")
+	userID := val.(uint)
+
+	commentIDStr := c.Param("id")
+	commentID, err := strconv.ParseUint(commentIDStr, 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de comentario inválido"})
 		return
@@ -78,27 +80,32 @@ func (h *CommentHandler) UpdateComment(c *gin.Context) {
 		return
 	}
 
-	updated, err := h.service.UpdateComment(uint(id), req)
+	comment, err := h.service.UpdateComment(userID, uint(commentID), req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al actualizar"})
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, updated)
+	c.JSON(http.StatusOK, comment)
 }
 
-// DELETE /comments/:id
-func (h *CommentHandler) DeleteComment(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+// Delete maneja DELETE /comments/:id
+func (h *CommentHandler) Delete(c *gin.Context) {
+	val, _ := c.Get("userID")
+	userID := val.(uint)
+
+	commentIDStr := c.Param("id")
+	commentID, err := strconv.ParseUint(commentIDStr, 10, 32)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID inválido"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID de comentario inválido"})
 		return
 	}
 
-	if err := h.service.DeleteComment(uint(id)); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al eliminar"})
+	err = h.service.DeleteComment(userID, uint(commentID))
+	if err != nil {
+		c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Comentario eliminado"})
+	c.JSON(http.StatusOK, gin.H{"message": "comentario eliminado exitosamente"})
 }
