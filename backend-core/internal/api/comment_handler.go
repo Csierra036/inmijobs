@@ -34,7 +34,6 @@ func (h *CommentHandler) Routes() http.Handler {
 	return r
 }
 
-// finder
 func (h *CommentHandler) List(w http.ResponseWriter, r *http.Request) {
 	comments, err := h.commentService.ListComments(r.Context(), 100)
 	if err != nil {
@@ -45,7 +44,6 @@ func (h *CommentHandler) List(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, comments)
 }
 
-// get by id
 func (h *CommentHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
@@ -58,7 +56,6 @@ func (h *CommentHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, comment)
 }
 
-// create
 func (h *CommentHandler) Create(w http.ResponseWriter, r *http.Request) {
 
 	user, err := h.authService.UserFromHeader(r.Context(), r.Header)
@@ -83,7 +80,6 @@ func (h *CommentHandler) Create(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusCreated, created)
 }
 
-// Update
 func (h *CommentHandler) Update(w http.ResponseWriter, r *http.Request) {
 	commentID := chi.URLParam(r, "id")
 
@@ -108,7 +104,6 @@ func (h *CommentHandler) Update(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, updated)
 }
 
-// Delete
 func (h *CommentHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 
