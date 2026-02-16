@@ -35,7 +35,7 @@ func main() {
 
 	commentService := core.NewCommentService(*commentRepository)
 
-	commentHandler := api.NewCommentHandler(*commentService)
+	commentHandler := api.NewCommentHandler(*commentService, *authService)
 
 	r := chi.NewRouter()
 

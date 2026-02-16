@@ -12,10 +12,14 @@ import (
 
 type CommentHandler struct {
 	commentService core.CommentService
+	authService    core.AuthService
 }
 
-func NewCommentHandler(cs core.CommentService) *CommentHandler {
-	return &CommentHandler{commentService: cs}
+func NewCommentHandler(cs core.CommentService, as core.AuthService) *CommentHandler {
+	return &CommentHandler{
+		commentService: cs,
+		authService:    as,
+	}
 }
 
 func (h *CommentHandler) Routes() http.Handler {
@@ -44,6 +48,7 @@ func (h *CommentHandler) List(w http.ResponseWriter, r *http.Request) {
 // get by id
 func (h *CommentHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
+
 	comment, err := h.commentService.GetCommentByID(r.Context(), id)
 	if err != nil {
 		utils.RespondError(w, http.StatusNotFound, "comment not found: "+err.Error())
@@ -55,24 +60,38 @@ func (h *CommentHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 
 // create
 func (h *CommentHandler) Create(w http.ResponseWriter, r *http.Request) {
+
+	user, err := h.authService.UserFromHeader(r.Context(), r.Header)
+	if err != nil {
+		utils.RespondError(w, http.StatusUnauthorized, "unauthorized: "+err.Error())
+		return
+	}
+
 	var comment dto.CreateCommentRequest
 	if err := json.NewDecoder(r.Body).Decode(&comment); err != nil {
 		utils.RespondError(w, http.StatusBadRequest, "invalid request body: "+err.Error())
 		return
 	}
 
+	comment.UserID = user.ID
+
 	created, err := h.commentService.CreateComment(r.Context(), comment)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, "unable to create comment: "+err.Error())
 		return
 	}
-
 	utils.RespondJSON(w, http.StatusCreated, created)
 }
 
 // Update
 func (h *CommentHandler) Update(w http.ResponseWriter, r *http.Request) {
 	commentID := chi.URLParam(r, "id")
+
+	_, err := h.authService.UserFromHeader(r.Context(), r.Header)
+	if err != nil {
+		utils.RespondError(w, http.StatusUnauthorized, "unauthorized: "+err.Error())
+		return
+	}
 
 	var commentRequest dto.UpdateCommentRequest
 	if err := json.NewDecoder(r.Body).Decode(&commentRequest); err != nil {
@@ -92,6 +111,12 @@ func (h *CommentHandler) Update(w http.ResponseWriter, r *http.Request) {
 // Delete
 func (h *CommentHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
+
+	_, err := h.authService.UserFromHeader(r.Context(), r.Header)
+	if err != nil {
+		utils.RespondError(w, http.StatusUnauthorized, "unauthorized: "+err.Error())
+		return
+	}
 
 	if err := h.commentService.DeleteComment(r.Context(), id); err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, "unable to delete comment: "+err.Error())
