@@ -26,10 +26,17 @@ func main() {
 	}
 
 	authRepository := repository.NewAuthRepository(*db)
+	profileRepository := repository.NewProfileRepository(*db)
 
 	authService := core.NewAuthService(*authRepository)
+	profileService := core.NewProfileService(*profileRepository)
 
 	pingHandler := api.NewPingHandler(*authService)
+	profileHandler := api.NewProfileHandler(*profileService, *authService)
+
+	jobRepository := repository.NewJobRepository(db)
+	jobService := core.NewJobService(jobRepository)
+	jobHandler := api.NewJobHandler(jobService)
 
 	r := chi.NewRouter()
 
@@ -40,6 +47,12 @@ func main() {
 
 	r.Route("/api", func(r chi.Router) {
 		r.Get("/ping", pingHandler.Ping)
+		r.Put("/profiles/me", profileHandler.UpdateProfile)
+    r.Get("/profiles/{id}",profileHandler.GetProfile)
+		r.Route("/jobs/{id}", func(r chi.Router) {
+			r.Get("/", jobHandler.GetJobByID)
+			r.Put("/", jobHandler.UpdateJob)
+		})
 	})
 
 	port := ":8080"
