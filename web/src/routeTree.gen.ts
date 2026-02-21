@@ -61,6 +61,7 @@ export interface FileRoutesByFullPath {
   '/signup': typeof authSignupRoute
   '/profile': typeof privateProfileRoute
   '/jobs': typeof privateJobsRoute
+  '/post-card-preview': typeof privatePostCardPreviewRoute
   '/': typeof privateIndexRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +70,7 @@ export interface FileRoutesByTo {
   '/signup': typeof authSignupRoute
   '/profile': typeof privateProfileRoute
   '/jobs': typeof privateJobsRoute
+  '/post-card-preview': typeof privatePostCardPreviewRoute
   '/': typeof privateIndexRoute
 }
 export interface FileRoutesById {
@@ -80,6 +82,7 @@ export interface FileRoutesById {
   '/(auth)/signup': typeof authSignupRoute
   '/(private)/profile': typeof privateProfileRoute
   '/(private)/jobs': typeof privateJobsRoute
+  '/(private)/post-card-preview': typeof privatePostCardPreviewRoute
   '/(private)/': typeof privateIndexRoute
 }
 export interface FileRouteTypes {
@@ -89,7 +92,7 @@ export interface FileRouteTypes {
   to: '/ping' | '/signin' | '/signup' | '/profile' | '/'
   fullPaths: '/ping' | '/signin' | '/signup' | '/jobs' | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/ping' | '/signin' | '/signup' | '/jobs' | '/'
+  to: '/ping' | '/signin' | '/signup' | '/jobs' | '/post-card-preview' | '/'
   id:
     | '__root__'
     | '/(auth)'
@@ -99,6 +102,7 @@ export interface FileRouteTypes {
     | '/(auth)/signup'
     | '/(private)/profile'
     | '/(private)/jobs'
+    | '/(private)/post-card-preview'
     | '/(private)/'
   fileRoutesById: FileRoutesById
 }
@@ -184,12 +188,14 @@ const authRouteRouteWithChildren = authRouteRoute._addFileChildren(
 interface privateRouteRouteChildren {
   privateProfileRoute: typeof privateProfileRoute
   privateJobsRoute: typeof privateJobsRoute
+  privatePostCardPreviewRoute: typeof privatePostCardPreviewRoute
   privateIndexRoute: typeof privateIndexRoute
 }
 
 const privateRouteRouteChildren: privateRouteRouteChildren = {
   privateProfileRoute: privateProfileRoute,
   privateJobsRoute: privateJobsRoute,
+  privatePostCardPreviewRoute: privatePostCardPreviewRoute,
   privateIndexRoute: privateIndexRoute,
 }
 
