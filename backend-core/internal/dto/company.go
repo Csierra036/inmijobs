@@ -38,6 +38,14 @@ type CompanyResponse struct {
 	Locations   []LocationResponse `json:"locations,omitempty"`
 }
 
+type PaginatedCompanyResponse struct {
+	Companies  []CompanyResponse `json:"data"`
+	Total      int64             `json:"total"`
+	Page       int               `json:"page"`
+	Limit      int               `json:"limit"`
+	TotalPages int               `json:"totalPages"`
+}
+
 type LocationResponse struct {
 	ID      string `json:"id"`
 	Address string `json:"address"`

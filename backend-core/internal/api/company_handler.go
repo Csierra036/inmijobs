@@ -74,30 +74,43 @@ func (h *CompanyHandler) CompanyFinder(w http.ResponseWriter, r *http.Request) {
 		UserId: &userID,
 	}
 
-	jobs, total, err := h.companyService.CompanyFinder(r.Context(), filters)
+	companies, total, err := h.companyService.CompanyFinder(r.Context(), filters)
 	if err != nil {
 		utils.RespondError(w, http.StatusInternalServerError, "Failed to fetch jobs")
 		return
 	}
 
-	jobDTOs := make([]dto.JobDTO, len(jobs))
-	for i, job := range jobs {
-		jobDTOs[i] = dto.JobDTO{
-			ID:          job.ID,
-			Title:       job.Title,
-			Description: job.Description,
-			Location:    job.Location,
-			Company: dto.CompanyDTO{
-				ID:          job.Company.ID,
-				Name:        job.Company.Name,
-				Sector:      job.Company.Sector,
-				Description: job.Company.Description,
-				Logo:        job.Company.Logo,
-			},
-			SalaryMin:      job.SalaryMin,
-			SalaryMax:      job.SalaryMax,
-			EmploymentType: job.EmploymentType,
-			CreatedAt:      job.CreatedAt.Time().Unix(),
+	companyDtos := make([]dto.CompanyResponse, len(companies))
+	for i, company := range companies {
+
+		// 🔥 Convertir Locations
+		locationDtos := make([]dto.LocationResponse, len(company.Locations))
+		for j, loc := range company.Locations {
+			locationDtos[j] = dto.LocationResponse{
+				ID:      loc.ID,
+				Address: loc.Address,
+				City:    loc.City,
+				Country: loc.Country,
+				IsHQ:    loc.IsHQ,
+			}
+		}
+
+		companyDtos[i] = dto.CompanyResponse{
+			ID:          company.ID,
+			Name:        company.Name,
+			Description: company.Description,
+			Weblink:     company.Weblink,
+			LinkedinURL: company.LinkedinURL,
+			Number:      company.Number,
+			Sector:      company.Sector,
+			Foundation:  company.Foundation,
+			Size:        company.Size,
+			Logo:        company.Logo,
+			Banner:      company.Banner,
+			CreatedAt:   company.CreatedAt,
+			UpdatedAt:   company.UpdatedAt,
+			UserID:      company.UserID,
+			Locations:   locationDtos,
 		}
 	}
 
@@ -109,8 +122,8 @@ func (h *CompanyHandler) CompanyFinder(w http.ResponseWriter, r *http.Request) {
 		totalPages++
 	}
 
-	utils.RespondJSON(w, http.StatusOK, dto.PaginatedJobsResponse{
-		Jobs:       jobDTOs,
+	utils.RespondJSON(w, http.StatusOK, dto.PaginatedCompanyResponse{
+		Companies:  companyDtos,
 		Total:      total,
 		Page:       page,
 		Limit:      limit,

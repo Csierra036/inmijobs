@@ -26,24 +26,50 @@ func (r *CompanyRepository) GetByID(id string) (*model.Company, error) {
 	return &company, err
 }
 
-// CompanyFinder returns a list of jobs filtered by company/name/location
-func (r *CompanyRepository) CompanyFinder(ctx context.Context, filter dto.CompanyFilterDto) ([]model.Job, int64, error) {
+func (r *CompanyRepository) CompanyFinder(
+	ctx context.Context,
+	filter dto.CompanyFilterDto,
+) ([]model.Company, int64, error) {
+
+	if filter.Page < 1 {
+		filter.Page = 1
+	}
+	if filter.Limit < 1 {
+		filter.Limit = 10
+	}
 	offset := (filter.Page - 1) * filter.Limit
 
-	// Start query on jobs and join companies for filtering by company fields
-	query := r.db.WithContext(ctx).Model(&model.Job{}).Where("is_active = ?", true)
+	var companies []model.Company
+	var total int64
+
+	baseQuery := r.db.WithContext(ctx).Model(&model.Company{}).Preload("Locations")
 
 	if filter.Name != nil && *filter.Name != "" {
-		q := "%" + *filter.Name + "%"
-		query = query.Joins("JOIN companies ON jobs.company_id = companies.id").Where("companies.name LIKE ? OR jobs.location LIKE ?", q, q)
+		search := "%" + *filter.Name + "%"
+		baseQuery = baseQuery.Where("name LIKE ?", search)
 	}
 
-	var total int64
-	if err := query.Count(&total).Error; err != nil {
+	if filter.UserId != nil && *filter.UserId != "" {
+		baseQuery = baseQuery.Where("user_id = ?", *filter.UserId)
+	}
+
+	if err := baseQuery.Count(&total).Error; err != nil {
 		return nil, 0, err
 	}
 
-	var jobs []model.Job
-	err := query.Preload("Company").Order("created_at DESC").Limit(filter.Limit).Offset(offset).Find(&jobs).Error
-	return jobs, total, err
+	if offset >= int(total) {
+		offset = 0
+	}
+
+	err := baseQuery.
+		Order("created_at DESC").
+		Limit(filter.Limit).
+		Offset(offset).
+		Find(&companies).Error
+
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return companies, total, nil
 }
